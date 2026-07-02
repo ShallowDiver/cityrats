@@ -3,66 +3,81 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rodenticide in NYC</title>
-<meta name="description" content="A heat map of where New York City applies rat poison, built from health department bait treatment records.">
+<title>Where are our furry friends?</title>
+<meta name="description" content="A friendly map of New York City's rats, following 311 sightings and city bait records.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="vendor/leaflet.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="map" aria-label="Heat map of rodenticide application across New York City"></div>
+<div id="map" aria-label="Map of rat activity across New York City"></div>
 
 <aside class="panel" id="panel">
-  <div class="hazard" aria-hidden="true"></div>
-
-  <div class="notice-band">
-    <span class="notice-word">Notice</span>
-    <button class="panel-toggle" id="panelToggle" aria-expanded="true" aria-controls="panelBody">Hide</button>
-  </div>
+  <svg class="mascot" viewBox="0 0 120 64" aria-hidden="true">
+    <!-- a rat peeking over the panel edge -->
+    <line x1="14" y1="52" x2="-6" y2="44" stroke="#8d7b6c" stroke-width="2" stroke-linecap="round"/>
+    <line x1="14" y1="57" x2="-8" y2="57" stroke="#8d7b6c" stroke-width="2" stroke-linecap="round"/>
+    <line x1="106" y1="52" x2="126" y2="44" stroke="#8d7b6c" stroke-width="2" stroke-linecap="round"/>
+    <line x1="106" y1="57" x2="128" y2="57" stroke="#8d7b6c" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="30" cy="26" r="17" fill="#8d7b6c"/>
+    <circle cx="90" cy="26" r="17" fill="#8d7b6c"/>
+    <circle cx="30" cy="26" r="9" fill="#f2a9bb"/>
+    <circle cx="90" cy="26" r="9" fill="#f2a9bb"/>
+    <ellipse cx="60" cy="52" rx="38" ry="28" fill="#8d7b6c"/>
+    <circle cx="46" cy="46" r="4" fill="#33261d"/>
+    <circle cx="74" cy="46" r="4" fill="#33261d"/>
+    <circle cx="47.5" cy="44.5" r="1.3" fill="#fdf4e7"/>
+    <circle cx="75.5" cy="44.5" r="1.3" fill="#fdf4e7"/>
+    <ellipse cx="60" cy="60" rx="5.5" ry="4" fill="#e56b8c"/>
+  </svg>
+  <button class="panel-toggle" id="panelToggle" aria-expanded="true" aria-controls="panelBody">Hide</button>
 
   <div class="panel-body" id="panelBody">
-    <h1 class="title">Rodenticide<br>in New York City</h1>
+    <p class="eyebrow">New York City rat watch</p>
+    <h1 class="title">Where are our furry friends?</h1>
     <p class="lede">
-      Two signals of where the rats are: <span id="totalAll" class="num">400,000</span>
-      bait treatments logged by city health inspectors since 2010, and
-      <span id="totalComplaints" class="num">140,000</span> rat sightings
-      reported to 311 since 2020. Blend them below.
+      New York's rats are busy little neighbors. This map follows two trails:
+      <span id="totalComplaints" class="num">140,000</span> sightings reported
+      to 311 by observant humans, and
+      <span id="totalAll" class="num">400,000</span> spots where the city set
+      out bait for them. Blend the trails below.
     </p>
 
     <div class="control-block">
       <div class="control-head">
-        <span class="control-label">Signal mix</span>
-        <span class="year-readout" id="mixReadout">Half and half</span>
+        <span class="control-label">Which trail</span>
+        <span class="readout" id="mixReadout">Half and half</span>
       </div>
       <input type="range" id="mixSlider" min="0" max="100" step="5" value="50"
-             aria-label="Blend between bait treatments and 311 complaints">
-      <div class="legend-ends" aria-hidden="true">
-        <span class="mix-bait">More bait</span>
-        <span class="mix-comp">More 311</span>
+             aria-label="Blend between bait spots and sightings">
+      <div class="slider-ends" aria-hidden="true">
+        <span class="mix-bait">More bait spots</span>
+        <span class="mix-comp">More sightings</span>
       </div>
     </div>
 
     <div class="control-block">
       <div class="control-head">
         <span class="control-label">Year</span>
-        <span class="year-readout" id="yearReadout">All years</span>
+        <span class="readout" id="yearReadout">All years</span>
       </div>
       <input type="range" id="yearSlider" min="0" max="16" step="1" value="0"
              aria-label="Filter records by year">
-      <button class="all-years" id="allYearsBtn" disabled>Show all years</button>
+      <button class="pill-btn" id="allYearsBtn" disabled>Show all years</button>
     </div>
 
     <div class="control-block">
       <div class="control-head">
-        <span class="control-label">Adjustments</span>
+        <span class="control-label">Fine tuning</span>
       </div>
       <label class="check-row">
         <input type="checkbox" id="decayBait">
-        <span>Fade older bait records</span>
+        <span>Let older bait spots fade</span>
       </label>
       <label class="check-row">
         <input type="checkbox" id="decayComp">
-        <span>Fade older complaints</span>
+        <span>Let older sightings fade</span>
       </label>
       <div class="halflife-row" id="halfLifeRow">
         <span class="halflife-label">Half life</span>
@@ -72,30 +87,37 @@
       </div>
       <label class="check-row">
         <input type="checkbox" id="adjustComp">
-        <span>Correct complaints for 311 habits</span>
+        <span>Even out chatty neighborhoods</span>
       </label>
       <p class="hint">
-        Divides rat complaints by all 311 activity within about a quarter
-        mile, so heavy-reporting areas do not dominate.
+        Some blocks call 311 about everything. This divides sightings by all
+        311 calls within about a quarter mile, so rats on quieter blocks get
+        their fair share of attention.
       </p>
     </div>
 
     <div class="control-block">
       <div class="control-head">
-        <span class="control-label">Signal per block</span>
+        <span class="control-label">Rat activity per block</span>
       </div>
       <div class="legend-bar" aria-hidden="true"></div>
-      <div class="legend-ends" aria-hidden="true">
-        <span>Weaker</span><span>Stronger</span>
+      <div class="slider-ends" aria-hidden="true">
+        <span>Barely a whisker</span><span>Rat central</span>
+      </div>
+      <input type="range" id="glowSlider" min="0" max="100" step="5" value="50"
+             aria-label="Overall heat map brightness"
+             class="glow-slider">
+      <div class="slider-ends" aria-hidden="true">
+        <span>Dimmer</span><span>Brighter</span>
       </div>
     </div>
 
     <div class="control-block">
       <div class="control-head">
-        <span class="control-label">By borough</span>
+        <span class="control-label">Hangouts</span>
         <span class="control-label key">
           <span class="key-swatch key-bait"></span>Bait
-          <span class="key-swatch key-comp"></span>311
+          <span class="key-swatch key-comp"></span>Sightings
         </span>
       </div>
       <ul class="boroughs" id="boroughList"></ul>
@@ -103,7 +125,7 @@
 
     <footer class="panel-foot">
       <p>
-        Unofficial map. Data:
+        A fan-made map, not an official rat census. Data:
         <a href="https://data.cityofnewyork.us/Health/Rodent-Inspection/p937-wjvj">DOHMH
         Rodent Inspection</a> (bait applied, 2010 to present) and
         <a href="https://data.cityofnewyork.us/Social-Services/311-Service-Requests-from-2010-to-Present/erm2-nwe9">311
@@ -111,9 +133,8 @@
         Updated <span id="generatedDate"></span>.
       </p>
       <p>
-        Treatments follow complaints and failed inspections, so the map shows
-        where the city treats and where people report, which is not exactly
-        where every rat lives.
+        Both trails follow people as much as rats, so this shows where rats
+        and New Yorkers cross paths, not every burrow in the five boroughs.
       </p>
     </footer>
   </div>

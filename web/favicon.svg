@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <circle cx="16" cy="17" r="13" fill="#8d7b6c"/>
+  <circle cx="48" cy="17" r="13" fill="#8d7b6c"/>
+  <circle cx="16" cy="17" r="7" fill="#f2a9bb"/>
+  <circle cx="48" cy="17" r="7" fill="#f2a9bb"/>
+  <ellipse cx="32" cy="38" rx="25" ry="21" fill="#8d7b6c"/>
+  <circle cx="23" cy="34" r="4" fill="#33261d"/>
+  <circle cx="41" cy="34" r="4" fill="#33261d"/>
+  <circle cx="24.5" cy="32.5" r="1.4" fill="#fdf4e7"/>
+  <circle cx="42.5" cy="32.5" r="1.4" fill="#fdf4e7"/>
+  <ellipse cx="32" cy="50" rx="6" ry="4.5" fill="#e56b8c"/>
+  <line x1="10" y1="44" x2="1" y2="41" stroke="#8d7b6c" stroke-width="2" stroke-linecap="round"/>
+  <line x1="10" y1="49" x2="1" y2="50" stroke="#8d7b6c" stroke-width="2" stroke-linecap="round"/>
+  <line x1="54" y1="44" x2="63" y2="41" stroke="#8d7b6c" stroke-width="2" stroke-linecap="round"/>
+  <line x1="54" y1="49" x2="63" y2="50" stroke="#8d7b6c" stroke-width="2" stroke-linecap="round"/>
+</svg>

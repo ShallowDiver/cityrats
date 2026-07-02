@@ -8,13 +8,14 @@
 
   var BOROUGH_ORDER = ["Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"];
 
-  // Must mirror .legend-bar in style.css
+  // Must mirror .legend-bar in style.css. Brightest color at the top end,
+  // since intensity reads as brightness on the dark basemap.
   var HEAT_GRADIENT = {
-    0.0: "#2a1a5e",
-    0.35: "#7b2e8e",
-    0.58: "#d6402b",
-    0.78: "#f7841a",
-    1.0: "#f7b500"
+    0.0: "#3f6d6a",
+    0.4: "#c94f74",
+    0.65: "#ff70a6",
+    0.85: "#ff9770",
+    1.0: "#ffd166"
   };
 
   var map = L.map("map", {
@@ -49,7 +50,8 @@
     decayBait: false,
     decayComp: false,
     halfLife: HL_DEFAULT, // months
-    adjust: false  // correct complaints for 311 usage by zip
+    adjust: false, // correct complaints for local 311 usage
+    glow: 50       // overall brightness, 0 to 100, 50 is neutral
   };
 
   var el = {
@@ -64,6 +66,7 @@
     halfLifeSlider: document.getElementById("halfLifeSlider"),
     halfLifeReadout: document.getElementById("halfLifeReadout"),
     adjustComp: document.getElementById("adjustComp"),
+    glowSlider: document.getElementById("glowSlider"),
     boroughList: document.getElementById("boroughList")
   };
 
@@ -168,6 +171,11 @@
     }
     weights.sort(function (a, b) { return a - b; });
 
+    // The glow slider raises or lowers the ramp's ceiling exponentially:
+    // 4x dimmer at 0, neutral at 50, 4x brighter at 100. A higher ceiling
+    // means less of the map reaches the hot colors.
+    var glowScale = Math.pow(2, (50 - state.glow) / 25);
+
     if (heatLayer) map.removeLayer(heatLayer);
     heatLayer = L.heatLayer(points, {
       radius: 12,
@@ -176,7 +184,7 @@
       // that share a pixel bucket, so zoomed-out density is handled there.
       // maxZoom is the level where 100m grid cells stand alone on screen.
       maxZoom: 13,
-      max: percentile(weights, 0.98) * 2.2,
+      max: percentile(weights, 0.98) * 2.2 * glowScale,
       minOpacity: 0.03,
       gradient: HEAT_GRADIENT
     }).addTo(map);
@@ -263,7 +271,7 @@
     sep.textContent = " / ";
     var compPart = document.createElement("span");
     compPart.className = "mix-comp";
-    compPart.textContent = "311 " + state.mix + "%";
+    compPart.textContent = "Sightings " + state.mix + "%";
     el.mixReadout.appendChild(baitPart);
     el.mixReadout.appendChild(sep);
     el.mixReadout.appendChild(compPart);
@@ -289,6 +297,7 @@
     if (decay) parts.push("decay=" + decay);
     if (state.halfLife !== HL_DEFAULT) parts.push("hl=" + state.halfLife + "m");
     if (state.adjust) parts.push("adj=1");
+    if (state.glow !== 50) parts.push("glow=" + state.glow);
     history.replaceState(
       null, "",
       parts.length ? "#" + parts.join("&") : window.location.pathname
@@ -325,6 +334,9 @@
           break;
         case "adj":
           state.adjust = val === "1";
+          break;
+        case "glow":
+          state.glow = Math.min(100, Math.max(0, parseInt(val, 10) || 0));
           break;
       }
     });
@@ -374,6 +386,11 @@
       state.adjust = el.adjustComp.checked;
       refresh();
     });
+
+    el.glowSlider.addEventListener("input", function () {
+      state.glow = parseInt(el.glowSlider.value, 10);
+      refresh();
+    });
   }
 
   function init(loadedBait, loadedComplaints) {
@@ -396,6 +413,7 @@
     el.decayComp.checked = state.decayComp;
     el.halfLifeSlider.value = nearestHalfLifeIndex(state.halfLife);
     el.adjustComp.checked = state.adjust;
+    el.glowSlider.value = state.glow;
 
     bindControls();
     refresh();

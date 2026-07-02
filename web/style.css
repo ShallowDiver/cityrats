@@ -1,24 +1,26 @@
-/* Rodenticide in NYC
-   The control panel is styled after the bait station warning placards the
-   city posts in parks: caution yellow notice band, hazard stripe, condensed
-   signage type on near-black. */
+/* Where are our furry friends?
+   A friendly field-guide look: warm cream panel with storybook rounding,
+   a rat mascot peeking over the edge, rounded signage type, and a light
+   daytime basemap. */
 
 @font-face {
-  font-family: "Oswald";
+  font-family: "Fredoka";
   font-style: normal;
-  font-weight: 200 700;
+  font-weight: 300 700;
   font-display: swap;
-  src: url("vendor/fonts/oswald-latin.woff2") format("woff2");
+  src: url("vendor/fonts/fredoka-latin.woff2") format("woff2");
 }
 
 :root {
-  --placard: #17150f;
-  --placard-edge: #2b2820;
-  --caution: #f7b500;
-  --bone: #f2eee3;
-  --faded: #979078;
-  --alarm: #d6402b;
-  --sign: "Oswald", "Arial Narrow", sans-serif;
+  --paper: #fdf4e7;
+  --ink: #4a3527;
+  --soft: #a08a76;
+  --line: #e8d8c3;
+  --rose: #e56b8c;
+  --rose-deep: #c94f74;
+  --amber: #e9a13b;
+  --fur: #8d7b6c;
+  --sign: "Fredoka", "Comic Sans MS", sans-serif;
   --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -27,108 +29,110 @@
 html, body {
   margin: 0;
   height: 100%;
-  background: #0c0c0e;
+  background: #14110e;
   font-family: var(--body);
 }
 
 #map {
   position: fixed;
   inset: 0;
-  background: #0c0c0e;
+  background: #14110e;
 }
 
-/* Placard panel */
+/* Panel */
 
 .panel {
   position: fixed;
-  top: 16px;
+  top: 26px;
   left: 16px;
   z-index: 1000;
-  width: 336px;
+  width: 340px;
   max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
+  max-height: calc(100vh - 42px);
   display: flex;
   flex-direction: column;
-  background: var(--placard);
-  color: var(--bone);
-  border: 1px solid var(--placard-edge);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(74, 53, 39, 0.25);
 }
 
-.hazard {
-  height: 10px;
-  flex: none;
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--caution) 0 12px,
-    var(--placard) 12px 24px
-  );
-}
-
-.notice-band {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--caution);
-  color: var(--placard);
-  padding: 4px 14px;
-}
-
-.notice-word {
-  font-family: var(--sign);
-  font-weight: 700;
-  font-size: 1.1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.42em;
+.mascot {
+  position: absolute;
+  top: -35px;
+  left: 26px;
+  width: 96px;
+  height: 51px;
+  pointer-events: none;
 }
 
 .panel-toggle {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 1;
   font-family: var(--sign);
-  font-weight: 600;
+  font-weight: 500;
   font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--placard);
-  background: none;
-  border: 1px solid rgba(23, 21, 15, 0.45);
-  padding: 2px 8px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 3px 12px;
   cursor: pointer;
 }
 
-.panel-toggle:hover { background: rgba(23, 21, 15, 0.12); }
+.panel-toggle:hover { background: var(--line); }
 
 .panel-body {
   overflow-y: auto;
-  padding: 14px 16px 10px;
+  padding: 16px 18px 10px;
+  border-radius: 16px;
   scrollbar-width: thin;
-  scrollbar-color: var(--placard-edge) transparent;
+  scrollbar-color: var(--line) transparent;
 }
 
 .panel-body::-webkit-scrollbar { width: 6px; }
-.panel-body::-webkit-scrollbar-thumb { background: var(--placard-edge); }
+.panel-body::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 3px;
+}
 
 .panel.collapsed .panel-body { display: none; }
+.panel.collapsed { min-height: 44px; }
+
+.eyebrow {
+  margin: 0 0 2px;
+  font-family: var(--sign);
+  font-weight: 500;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--rose);
+}
 
 .title {
   margin: 0 0 8px;
+  padding-right: 48px;
   font-family: var(--sign);
   font-weight: 600;
-  font-size: 1.75rem;
-  line-height: 1.02;
-  text-transform: uppercase;
-  letter-spacing: 0.015em;
+  font-size: 1.55rem;
+  line-height: 1.1;
+  color: var(--ink);
 }
 
 .lede {
   margin: 0 0 14px;
   font-size: 0.8rem;
   line-height: 1.45;
-  color: var(--faded);
+  color: var(--soft);
 }
 
 .lede .num {
-  color: var(--bone);
+  color: var(--ink);
   font-weight: 600;
 }
 
@@ -140,7 +144,8 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
+  gap: 8px;
 }
 
 .control-label {
@@ -148,27 +153,15 @@ html, body {
   font-weight: 500;
   font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--faded);
+  letter-spacing: 0.12em;
+  color: var(--fur);
 }
 
-.year-readout {
+.readout {
   font-family: var(--sign);
   font-weight: 600;
-  font-size: 1rem;
-  color: var(--caution);
-}
-
-/* Mix slider: bait is always the yellow side, 311 always the red side,
-   matching the borough table key. */
-
-.mix-bait { color: var(--caution); }
-.mix-comp { color: #e06550; }
-.mix-sep { color: var(--faded); }
-
-.legend-ends .mix-bait,
-.legend-ends .mix-comp {
-  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--rose-deep);
 }
 
 input[type="range"] {
@@ -182,54 +175,82 @@ input[type="range"] {
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
-  height: 3px;
-  background: var(--placard-edge);
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line);
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   margin-top: -5.5px;
-  background: var(--caution);
-  border: none;
-  border-radius: 0;
+  background: var(--rose);
+  border: 2px solid var(--ink);
+  border-radius: 50%;
 }
 
 input[type="range"]::-moz-range-track {
-  height: 3px;
-  background: var(--placard-edge);
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line);
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  background: var(--caution);
-  border: none;
-  border-radius: 0;
+  width: 12px;
+  height: 12px;
+  background: var(--rose);
+  border: 2px solid var(--ink);
+  border-radius: 50%;
 }
 
-.all-years {
+.slider-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--soft);
+}
+
+.mix-bait { color: var(--amber); }
+.mix-comp { color: var(--rose); }
+.mix-sep { color: var(--soft); }
+
+.slider-ends .mix-bait,
+.slider-ends .mix-comp {
+  font-weight: 700;
+}
+
+.readout .mix-bait { color: var(--amber); font-weight: 600; }
+.readout .mix-comp { color: var(--rose-deep); font-weight: 600; }
+
+.pill-btn {
   font-family: var(--sign);
   font-weight: 500;
   font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--bone);
+  letter-spacing: 0.08em;
+  color: var(--ink);
   background: none;
-  border: 1px solid var(--placard-edge);
-  padding: 4px 10px;
+  border: 1.5px solid var(--fur);
+  border-radius: 999px;
+  padding: 4px 12px;
   cursor: pointer;
 }
 
-.all-years:hover:not(:disabled) { border-color: var(--caution); color: var(--caution); }
+.pill-btn:hover:not(:disabled) {
+  border-color: var(--rose);
+  color: var(--rose-deep);
+}
 
-.all-years:disabled {
+.pill-btn:disabled {
   opacity: 0.35;
   cursor: default;
 }
 
-/* Adjustment checkboxes and half life */
+/* Fine tuning */
 
 .check-row {
   display: flex;
@@ -237,14 +258,14 @@ input[type="range"]::-moz-range-thumb {
   gap: 8px;
   margin-bottom: 6px;
   font-size: 0.78rem;
-  color: var(--bone);
+  color: var(--ink);
   cursor: pointer;
 }
 
 .check-row input {
-  accent-color: var(--caution);
-  width: 14px;
-  height: 14px;
+  accent-color: var(--rose);
+  width: 15px;
+  height: 15px;
   margin: 0;
   cursor: pointer;
 }
@@ -259,7 +280,7 @@ input[type="range"]::-moz-range-thumb {
   grid-template-columns: auto 1fr auto;
   gap: 10px;
   align-items: center;
-  margin: 2px 0 8px 22px;
+  margin: 2px 0 8px 23px;
 }
 
 .halflife-row.inactive { opacity: 0.35; }
@@ -269,17 +290,17 @@ input[type="range"]::-moz-range-thumb {
 .halflife-label {
   font-family: var(--sign);
   font-weight: 500;
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--faded);
+  letter-spacing: 0.1em;
+  color: var(--fur);
 }
 
 .halflife-readout {
   font-size: 0.72rem;
-  color: var(--bone);
+  color: var(--ink);
   font-variant-numeric: tabular-nums;
-  min-width: 44px;
+  min-width: 48px;
   text-align: right;
 }
 
@@ -287,34 +308,28 @@ input[type="range"]::-moz-range-thumb {
   margin: 4px 0 0;
   font-size: 0.68rem;
   line-height: 1.45;
-  color: var(--faded);
+  color: var(--soft);
 }
 
-/* Legend: stops mirror the heat layer gradient in app.js */
+/* Legend: stops mirror the heat gradient in app.js */
+
+.glow-slider { margin-top: 8px; }
 
 .legend-bar {
-  height: 8px;
+  height: 9px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
   background: linear-gradient(
     to right,
-    #2a1a5e,
-    #7b2e8e 35%,
-    #d6402b 58%,
-    #f7841a 78%,
-    #f7b500
+    #3f6d6a,
+    #c94f74 40%,
+    #ff70a6 65%,
+    #ff9770 85%,
+    #ffd166
   );
 }
 
-.legend-ends {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 4px;
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--faded);
-}
-
-/* Borough stats: one yellow bar for bait, one red bar for 311 complaints */
+/* Borough stats: amber bar for bait, rose bar for sightings */
 
 .key {
   display: inline-flex;
@@ -324,12 +339,13 @@ input[type="range"]::-moz-range-thumb {
 
 .key-swatch {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
 }
 
-.key-swatch.key-bait { background: var(--caution); }
-.key-swatch.key-comp { background: var(--alarm); margin-left: 8px; }
+.key-swatch.key-bait { background: var(--amber); }
+.key-swatch.key-comp { background: var(--rose); margin-left: 8px; }
 
 .boroughs {
   list-style: none;
@@ -347,7 +363,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .boroughs .b-name {
-  color: var(--bone);
+  color: var(--ink);
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -361,19 +378,22 @@ input[type="range"]::-moz-range-thumb {
 
 .boroughs .b-bar {
   display: block;
-  height: 4px;
-  background: var(--placard-edge);
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line);
   position: relative;
+  overflow: hidden;
 }
 
 .boroughs .b-bar span {
   position: absolute;
   inset: 0 auto 0 0;
+  border-radius: 3px;
   transition: width 0.25s ease;
 }
 
-.boroughs .b-bar.bait span { background: var(--caution); }
-.boroughs .b-bar.comp span { background: var(--alarm); }
+.boroughs .b-bar.bait span { background: var(--amber); }
+.boroughs .b-bar.comp span { background: var(--rose); }
 
 .boroughs .b-counts {
   display: flex;
@@ -381,16 +401,16 @@ input[type="range"]::-moz-range-thumb {
   text-align: right;
   font-size: 0.66rem;
   line-height: 1.35;
-  color: var(--faded);
+  color: var(--soft);
   font-variant-numeric: tabular-nums;
 }
 
-.boroughs .b-counts .comp { color: #e06550; }
+.boroughs .b-counts .comp { color: var(--rose-deep); }
 
 /* Footer */
 
 .panel-foot {
-  border-top: 1px solid var(--placard-edge);
+  border-top: 1.5px dashed var(--line);
   padding-top: 10px;
 }
 
@@ -398,15 +418,15 @@ input[type="range"]::-moz-range-thumb {
   margin: 0 0 8px;
   font-size: 0.68rem;
   line-height: 1.5;
-  color: var(--faded);
+  color: var(--soft);
 }
 
-.panel-foot a { color: var(--bone); }
+.panel-foot a { color: var(--rose-deep); }
 
 /* Focus and motion */
 
 :focus-visible {
-  outline: 2px solid var(--caution);
+  outline: 2px solid var(--rose-deep);
   outline-offset: 2px;
 }
 
@@ -414,7 +434,7 @@ input[type="range"]::-moz-range-thumb {
   .boroughs .b-bar span { transition: none; }
 }
 
-/* Small screens: dock the placard to the bottom */
+/* Small screens: the panel becomes a bottom sheet */
 
 @media (max-width: 640px) {
   .panel {
@@ -426,20 +446,20 @@ input[type="range"]::-moz-range-thumb {
     max-width: none;
     max-height: 62vh;
   }
-  .title { font-size: 1.5rem; }
+  .title { font-size: 1.35rem; }
 }
 
-/* Leaflet chrome on a dark map */
+/* Leaflet chrome: cream controls floating on the dark map */
 
 .leaflet-control-attribution {
-  background: rgba(12, 12, 14, 0.7) !important;
-  color: #888;
+  background: rgba(20, 17, 14, 0.7) !important;
+  color: #8f8578;
 }
 
-.leaflet-control-attribution a { color: #aaa; }
+.leaflet-control-attribution a { color: #b3a896; }
 
 .leaflet-control-zoom a {
-  background: var(--placard) !important;
-  color: var(--bone) !important;
-  border-color: var(--placard-edge) !important;
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
 }

@@ -48,7 +48,7 @@ Then open http://localhost:8000. The site is also suitable for GitHub Pages, sin
 
 ## The map's math
 
-Every view is shareable: the controls mirror into the URL hash, for example `/#mix=70&decay=bc&hl=6m&adj=1` (`hl` is the half life in months).
+Every view is shareable: the controls mirror into the URL hash, for example `/#mix=70&decay=bc&hl=6m&adj=1&glow=30` (`hl` is the half life in months, `glow` is overall brightness from 0 to 100).
 
 Per grid cell and per signal, the value is the record count under the current year filter, times the decay weight `0.5^(age_in_years / half_life)` when decay is on, times the cell's window adjustment factor when the correction is on. Values are square-root compressed (counts are heavy-tailed), normalized by each signal's own 98th percentile so the mix slider compares like with like, then blended by the mix weight into a single heat layer.
 
