@@ -1,0 +1,48 @@
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Monthly data refresh: 06:17 UTC on the 3rd. An odd minute avoids the
+    # top-of-hour crowd, and skipping the 1st avoids month-end data churn.
+    - cron: "17 6 3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Fresh data on every deploy, so pushes and the monthly schedule both
+      # publish current numbers. Uses only the Python standard library.
+      # If NYC Open Data is down, the job fails and the previous deployment
+      # stays live.
+      - name: Fetch latest data
+        run: |
+          python3 pipeline/fetch_bait_data.py
+          python3 pipeline/fetch_complaint_data.py
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
