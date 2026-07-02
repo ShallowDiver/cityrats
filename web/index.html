@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rodenticide in NYC</title>
+<meta name="description" content="A heat map of where New York City applies rat poison, built from health department bait treatment records.">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="map" aria-label="Heat map of rodenticide application across New York City"></div>
+
+<aside class="panel" id="panel">
+  <div class="hazard" aria-hidden="true"></div>
+
+  <div class="notice-band">
+    <span class="notice-word">Notice</span>
+    <button class="panel-toggle" id="panelToggle" aria-expanded="true" aria-controls="panelBody">Hide</button>
+  </div>
+
+  <div class="panel-body" id="panelBody">
+    <h1 class="title">Rodenticide<br>in New York City</h1>
+    <p class="lede">
+      Two signals of where the rats are: <span id="totalAll" class="num">400,000</span>
+      bait treatments logged by city health inspectors since 2010, and
+      <span id="totalComplaints" class="num">140,000</span> rat sightings
+      reported to 311 since 2020. Blend them below.
+    </p>
+
+    <div class="control-block">
+      <div class="control-head">
+        <span class="control-label">Signal mix</span>
+        <span class="year-readout" id="mixReadout">Half and half</span>
+      </div>
+      <input type="range" id="mixSlider" min="0" max="100" step="5" value="50"
+             aria-label="Blend between bait treatments and 311 complaints">
+      <div class="legend-ends" aria-hidden="true">
+        <span class="mix-bait">More bait</span>
+        <span class="mix-comp">More 311</span>
+      </div>
+    </div>
+
+    <div class="control-block">
+      <div class="control-head">
+        <span class="control-label">Year</span>
+        <span class="year-readout" id="yearReadout">All years</span>
+      </div>
+      <input type="range" id="yearSlider" min="0" max="16" step="1" value="0"
+             aria-label="Filter records by year">
+      <button class="all-years" id="allYearsBtn" disabled>Show all years</button>
+    </div>
+
+    <div class="control-block">
+      <div class="control-head">
+        <span class="control-label">Adjustments</span>
+      </div>
+      <label class="check-row">
+        <input type="checkbox" id="decayBait">
+        <span>Fade older bait records</span>
+      </label>
+      <label class="check-row">
+        <input type="checkbox" id="decayComp">
+        <span>Fade older complaints</span>
+      </label>
+      <div class="halflife-row" id="halfLifeRow">
+        <span class="halflife-label">Half life</span>
+        <input type="range" id="halfLifeSlider" min="0" max="12" step="1" value="9"
+               aria-label="Decay half life, from one month to ten years">
+        <span class="halflife-readout" id="halfLifeReadout">4 yr</span>
+      </div>
+      <label class="check-row">
+        <input type="checkbox" id="adjustComp">
+        <span>Correct complaints for 311 habits</span>
+      </label>
+      <p class="hint">
+        Divides rat complaints by all 311 activity within about a quarter
+        mile, so heavy-reporting areas do not dominate.
+      </p>
+    </div>
+
+    <div class="control-block">
+      <div class="control-head">
+        <span class="control-label">Signal per block</span>
+      </div>
+      <div class="legend-bar" aria-hidden="true"></div>
+      <div class="legend-ends" aria-hidden="true">
+        <span>Weaker</span><span>Stronger</span>
+      </div>
+    </div>
+
+    <div class="control-block">
+      <div class="control-head">
+        <span class="control-label">By borough</span>
+        <span class="control-label key">
+          <span class="key-swatch key-bait"></span>Bait
+          <span class="key-swatch key-comp"></span>311
+        </span>
+      </div>
+      <ul class="boroughs" id="boroughList"></ul>
+    </div>
+
+    <footer class="panel-foot">
+      <p>
+        Unofficial map. Data:
+        <a href="https://data.cityofnewyork.us/Health/Rodent-Inspection/p937-wjvj">DOHMH
+        Rodent Inspection</a> (bait applied, 2010 to present) and
+        <a href="https://data.cityofnewyork.us/Social-Services/311-Service-Requests-from-2010-to-Present/erm2-nwe9">311
+        Service Requests</a> (rat sightings, 2020 to present).
+        Updated <span id="generatedDate"></span>.
+      </p>
+      <p>
+        Treatments follow complaints and failed inspections, so the map shows
+        where the city treats and where people report, which is not exactly
+        where every rat lives.
+      </p>
+    </footer>
+  </div>
+</aside>
+
+<script src="vendor/leaflet.js"></script>
+<script src="vendor/leaflet-heat.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
