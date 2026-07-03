@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.retry.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -44,5 +44,13 @@ jobs:
         with:
           path: web
 
+      # Pages deployments intermittently fail with a generic "try again
+      # later" even when nothing is wrong with the artifact, so one failure
+      # gets an automatic second attempt before the run is declared dead.
       - id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - id: retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
