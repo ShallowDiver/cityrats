@@ -11,6 +11,11 @@ on:
     - cron: "17 6 3 * *"
     - cron: "17 6 5 * *"
   workflow_dispatch:
+    inputs:
+      fresh_data:
+        description: "Refetch data from NYC Open Data (~15 min) instead of reusing the live site's data"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -30,13 +35,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Fresh data on every deploy. Uses only the Python standard library.
-      # If NYC Open Data is down, the job fails and the previous deployment
-      # stays live.
+      # Scheduled runs refetch everything from NYC Open Data (about 15
+      # minutes, Python standard library only). If NYC Open Data is down,
+      # the job fails and the previous deployment stays live. A manual run
+      # with "fresh_data" checked does the same.
       - name: Fetch latest data
+        if: github.event_name == 'schedule' || inputs.fresh_data
         run: |
           python3 pipeline/fetch_bait_data.py
           python3 pipeline/fetch_complaint_data.py
+
+      # Display-only deploys (pushes, plain manual runs) skip the refetch
+      # and reuse the data files the live site is already serving, so code
+      # changes go out in about a minute. If the site has never deployed,
+      # this fails; run the workflow manually with "fresh_data" instead.
+      - name: Reuse live site data
+        if: ${{ !(github.event_name == 'schedule' || inputs.fresh_data) }}
+        run: |
+          mkdir -p web/data
+          base="https://shallowdiver.github.io/cityrats/data"
+          curl -fsSL --retry 3 -o web/data/bait_grid.json "$base/bait_grid.json"
+          curl -fsSL --retry 3 -o web/data/complaints_grid.json "$base/complaints_grid.json"
 
       - uses: actions/upload-pages-artifact@v3
         with:
