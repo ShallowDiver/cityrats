@@ -36,9 +36,9 @@ jobs:
           python3 pipeline/fetch_bait_data.py
           python3 pipeline/fetch_complaint_data.py
 
+      # Pages must be enabled once by hand first: repo Settings, Pages,
+      # Source "GitHub Actions". The workflow token cannot do that itself.
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
