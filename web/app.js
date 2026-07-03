@@ -40,6 +40,42 @@
   var bait = null;
   var complaints = null;
 
+  // Grid cells are fixed ground size (about 100m) but heat stamps are sized
+  // in pixels, so past the zoom where stamps and cells match, a fixed stamp
+  // dissolves every cell into a faint dot pinned to its grid point. Above
+  // that zoom, stamps instead grow to a plateau covering each cell's real
+  // footprint, so treated blocks read as filled area with soft edges.
+  var BASE_HEAT_ZOOM = 13;
+  var HEAT_RADIUS = 12;
+  var HEAT_BLUR = 10;
+  var GRID_STEP = 0.001; // must match the pipeline's grid rounding
+
+  // Pixel height of one grid cell at the current zoom.
+  function cellPixels() {
+    var c = map.getCenter();
+    var z = map.getZoom();
+    var a = map.project(c, z);
+    var b = map.project(L.latLng(c.lat + GRID_STEP, c.lng), z);
+    return Math.abs(a.y - b.y);
+  }
+
+  // Stamp geometry plus a brightness compensation. Zoomed in, a stamp
+  // covers its own cell but few neighbors, so far fewer stamps stack per
+  // pixel than at BASE_HEAT_ZOOM, so the ramp ceiling is scaled down by
+  // the lost overlap or the map goes dim as soon as stamps separate. The
+  // exponent is empirical: 2 (the pure area ratio) overshoots because
+  // stacked alpha saturates rather than summing at BASE_HEAT_ZOOM.
+  function heatStamp() {
+    var s = cellPixels();
+    var radius = Math.max(HEAT_RADIUS, 0.75 * s);
+    var blur = Math.max(HEAT_BLUR, 0.55 * s);
+    var sBase = s / Math.pow(2, map.getZoom() - BASE_HEAT_ZOOM);
+    var overlapNow = (radius + blur) / s;
+    var overlapBase = (HEAT_RADIUS + HEAT_BLUR) / sBase;
+    var comp = Math.pow(overlapNow / overlapBase, 1.2);
+    return { radius: radius, blur: blur, comp: Math.min(1, comp) };
+  }
+
   // Half life slider positions, in months: one month up to ten years.
   var HL_STEPS = [1, 2, 3, 6, 9, 12, 18, 24, 36, 48, 60, 84, 120];
   var HL_DEFAULT = 3;
@@ -176,19 +212,26 @@
     // means less of the map reaches the hot colors.
     var glowScale = Math.pow(2, (50 - state.glow) / 25);
 
+    var stamp = heatStamp();
     if (heatLayer) map.removeLayer(heatLayer);
     heatLayer = L.heatLayer(points, {
-      radius: 12,
-      blur: 10,
+      radius: stamp.radius,
+      blur: stamp.blur,
       // The plugin scales intensity by 1/2^(maxZoom - zoom) and sums points
       // that share a pixel bucket, so zoomed-out density is handled there.
-      // maxZoom is the level where 100m grid cells stand alone on screen.
-      maxZoom: 13,
-      max: percentile(weights, 0.98) * 2.2 * glowScale,
+      // maxZoom is the level where 100m grid cells stand alone on screen;
+      // above it, stamp scaling takes over.
+      maxZoom: BASE_HEAT_ZOOM,
+      max: percentile(weights, 0.98) * 2.2 * glowScale * stamp.comp,
       minOpacity: 0.03,
       gradient: HEAT_GRADIENT
     }).addTo(map);
   }
+
+  // Stamp size and the overlap compensation both depend on zoom.
+  map.on("zoomend", function () {
+    if (heatLayer) renderHeat();
+  });
 
   // Borough totals are plain record counts under the year filter; decay and
   // the 311 correction shape the map, not these numbers.
