@@ -463,3 +463,97 @@ input[type="range"]::-moz-range-thumb {
   color: var(--ink) !important;
   border-color: var(--line) !important;
 }
+
+/* Location dot and compass beam */
+
+.locate-btn {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+
+.locate-btn.active {
+  background: #4da3ff !important;
+  color: #fff !important;
+}
+
+.you-wrap { pointer-events: none; }
+
+.you-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: #4da3ff;
+  border: 2.5px solid #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+}
+
+/* A soft ping so the dot is findable at a glance on a busy map. */
+.you-dot::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid rgba(77, 163, 255, 0.8);
+  animation: you-ping 2.4s ease-out infinite;
+}
+
+@keyframes you-ping {
+  0% { transform: scale(1); opacity: 0.9; }
+  70%, 100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* Compass beam: a 60 degree wedge fading with distance, rotated from JS.
+   Hidden until a heading actually arrives. */
+.you-beam {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 88px;
+  height: 88px;
+  margin: -44px 0 0 -44px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from -30deg,
+    rgba(77, 163, 255, 0.95) 0deg,
+    rgba(112, 187, 255, 0.55) 42deg,
+    rgba(77, 163, 255, 0) 60deg
+  );
+  -webkit-mask-image: radial-gradient(closest-side, #000 18%, transparent 96%);
+  mask-image: radial-gradient(closest-side, #000 18%, transparent 96%);
+  display: none;
+}
+
+.you-beam.on { display: block; }
+
+/* Fix-status toast, bottom center of the map. */
+#locateToast {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  transform: translate(-50%, 8px);
+  z-index: 1100;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  font-family: var(--sign);
+  font-weight: 500;
+  font-size: 0.8rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+}
+
+#locateToast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}

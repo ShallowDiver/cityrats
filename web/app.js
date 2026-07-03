@@ -233,6 +233,223 @@
     if (heatLayer) renderHeat();
   });
 
+  // ---- Location dot with compass beam ----------------------------------
+  // A toggle button under the zoom control starts a geolocation watch and
+  // shows a dot, an accuracy ring, and (where the device offers a compass)
+  // a beam pointing the way the phone faces. Blue on purpose: it is the
+  // one color the heat ramp never uses, so it always reads as "you".
+
+  var locate = {
+    active: false,
+    watchId: null,
+    marker: null,
+    ring: null,
+    beamEl: null,
+    btn: null,
+    hasFix: false,
+    compass: false,
+    orientationEvt: null,
+    toastTimer: null
+  };
+
+  var LOCATE_ICON =
+    '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/>' +
+    '<circle cx="12" cy="12" r="2.2" fill="currentColor"/>' +
+    '<path d="M12 1.8v3.4M12 18.8v3.4M1.8 12h3.4M18.8 12h3.4" ' +
+    'stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+  var LocateControl = L.Control.extend({
+    options: { position: "topright" },
+    onAdd: function () {
+      var div = L.DomUtil.create("div", "leaflet-bar locate-control");
+      var btn = L.DomUtil.create("a", "locate-btn", div);
+      btn.href = "#";
+      btn.title = "Show my location";
+      btn.setAttribute("role", "button");
+      btn.setAttribute("aria-label", "Show my location");
+      btn.setAttribute("aria-pressed", "false");
+      btn.innerHTML = LOCATE_ICON;
+      L.DomEvent.disableClickPropagation(div);
+      L.DomEvent.on(btn, "click", function (e) {
+        L.DomEvent.stop(e);
+        if (locate.active) stopLocate();
+        else startLocate();
+      });
+      locate.btn = btn;
+      return div;
+    }
+  });
+  map.addControl(new LocateControl());
+
+  function locateToast(msg) {
+    var t = document.getElementById("locateToast");
+    if (!t) {
+      t = document.createElement("div");
+      t.id = "locateToast";
+      document.getElementById("map").appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(locate.toastTimer);
+    locate.toastTimer = setTimeout(function () {
+      t.classList.remove("show");
+    }, 4000);
+  }
+
+  function startLocate() {
+    if (!("geolocation" in navigator)) {
+      locateToast("This browser has no location support");
+      return;
+    }
+    locate.active = true;
+    locate.hasFix = false;
+    locate.btn.classList.add("active");
+    locate.btn.setAttribute("aria-pressed", "true");
+    // iOS only reveals the compass after an explicit permission request,
+    // and the request must come from a user gesture, hence here.
+    if (typeof DeviceOrientationEvent !== "undefined" &&
+        typeof DeviceOrientationEvent.requestPermission === "function") {
+      DeviceOrientationEvent.requestPermission()
+        .then(function (state) {
+          if (state === "granted") bindOrientation();
+        })
+        .catch(function () { /* no compass; the dot still works */ });
+    } else {
+      bindOrientation();
+    }
+    locate.watchId = navigator.geolocation.watchPosition(onFix, onFixError, {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 20000
+    });
+  }
+
+  function stopLocate() {
+    locate.active = false;
+    locate.btn.classList.remove("active");
+    locate.btn.setAttribute("aria-pressed", "false");
+    if (locate.watchId !== null) {
+      navigator.geolocation.clearWatch(locate.watchId);
+      locate.watchId = null;
+    }
+    if (locate.orientationEvt) {
+      window.removeEventListener(locate.orientationEvt, onOrientation);
+      locate.orientationEvt = null;
+    }
+    if (locate.marker) { map.removeLayer(locate.marker); locate.marker = null; }
+    if (locate.ring) { map.removeLayer(locate.ring); locate.ring = null; }
+    locate.beamEl = null;
+    locate.compass = false;
+  }
+
+  function onFix(pos) {
+    if (!locate.active) return;
+    var ll = [pos.coords.latitude, pos.coords.longitude];
+    var acc = pos.coords.accuracy || 0;
+    if (!locate.marker) {
+      locate.ring = L.circle(ll, {
+        radius: acc,
+        color: "#4da3ff",
+        weight: 1,
+        opacity: 0.4,
+        fillColor: "#4da3ff",
+        fillOpacity: 0.08,
+        interactive: false
+      }).addTo(map);
+      locate.marker = L.marker(ll, {
+        icon: L.divIcon({
+          className: "you-wrap",
+          iconSize: [72, 72],
+          iconAnchor: [36, 36],
+          html: '<div class="you-beam"></div><div class="you-dot"></div>'
+        }),
+        interactive: false,
+        keyboard: false,
+        zIndexOffset: 1000
+      }).addTo(map);
+      locate.beamEl = locate.marker.getElement().querySelector(".you-beam");
+    } else {
+      locate.marker.setLatLng(ll);
+      locate.ring.setLatLng(ll);
+      locate.ring.setRadius(acc);
+    }
+    // Without a compass, GPS course still gives a heading while moving.
+    if (!locate.compass && pos.coords.heading != null &&
+        !isNaN(pos.coords.heading) && (pos.coords.speed || 0) > 0.5) {
+      setHeading(pos.coords.heading);
+    }
+    if (!locate.hasFix) {
+      locate.hasFix = true;
+      // Land the dot in the middle of the map area the panel does not
+      // cover: to its right on desktop, above it on phones. A plain
+      // setView would center the dot under the panel on small screens.
+      map.setView(ll, Math.max(map.getZoom(), 15), { animate: false });
+      var t = clearViewpoint();
+      var c = map.getSize().divideBy(2);
+      map.panBy([Math.round(c.x - t.x), Math.round(c.y - t.y)], { animate: false });
+    }
+  }
+
+  // Center of the largest map region not covered by the control panel,
+  // in container pixels.
+  function clearViewpoint() {
+    var mapRect = document.getElementById("map").getBoundingClientRect();
+    var c = { x: mapRect.width / 2, y: mapRect.height / 2 };
+    var panel = document.getElementById("panel");
+    if (!panel || panel.classList.contains("collapsed")) return c;
+    var p = panel.getBoundingClientRect();
+    var rightW = mapRect.right - p.right;
+    var aboveH = p.top - mapRect.top;
+    if (rightW * mapRect.height >= aboveH * mapRect.width) {
+      if (rightW < 120) return c; // not enough room to bother
+      return { x: p.right - mapRect.left + rightW / 2, y: mapRect.height / 2 };
+    }
+    if (aboveH < 120) return c;
+    return { x: mapRect.width / 2, y: aboveH / 2 };
+  }
+
+  function onFixError(err) {
+    if (err.code === 1) {
+      locateToast("Location permission was denied");
+      stopLocate();
+    } else if (!locate.hasFix) {
+      locateToast("No location fix yet, still trying");
+    }
+  }
+
+  function setHeading(h) {
+    if (!locate.beamEl) return;
+    locate.beamEl.style.transform = "rotate(" + h + "deg)";
+    locate.beamEl.classList.add("on");
+  }
+
+  function bindOrientation() {
+    if (locate.orientationEvt) return;
+    // Chrome fires compass-grade readings on its own event; iOS Safari
+    // uses the plain event plus webkitCompassHeading.
+    locate.orientationEvt = "ondeviceorientationabsolute" in window
+      ? "deviceorientationabsolute"
+      : "deviceorientation";
+    window.addEventListener(locate.orientationEvt, onOrientation);
+  }
+
+  function onOrientation(e) {
+    var h = null;
+    if (typeof e.webkitCompassHeading === "number") {
+      h = e.webkitCompassHeading; // already clockwise from north
+    } else if (e.absolute && typeof e.alpha === "number") {
+      h = 360 - e.alpha;
+    }
+    if (h == null || isNaN(h)) return;
+    // Compass values are in the device frame; the map is in the screen
+    // frame, so rotate by however far the screen itself is turned.
+    var screenAngle = (screen.orientation && screen.orientation.angle) ||
+      window.orientation || 0;
+    locate.compass = true;
+    setHeading(((h + screenAngle) % 360 + 360) % 360);
+  }
+
   // Borough totals are plain record counts under the year filter; decay and
   // the 311 correction shape the map, not these numbers.
   function boroughTotal(data, name) {
