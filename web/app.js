@@ -42,15 +42,15 @@
 
   // Half life slider positions, in months: one month up to ten years.
   var HL_STEPS = [1, 2, 3, 6, 9, 12, 18, 24, 36, 48, 60, 84, 120];
-  var HL_DEFAULT = 48;
+  var HL_DEFAULT = 3;
 
   var state = {
     yearIndex: -1, // -1 means all years
     mix: 50,       // percent of the blend given to complaints
-    decayBait: false,
-    decayComp: false,
+    decayBait: true,
+    decayComp: true,
     halfLife: HL_DEFAULT, // months
-    adjust: false, // correct complaints for local 311 usage
+    adjust: true,  // correct complaints for local 311 usage
     glow: 50       // overall brightness, 0 to 100, 50 is neutral
   };
 
@@ -293,10 +293,12 @@
     var parts = [];
     if (state.yearIndex >= 0) parts.push("year=" + bait.years[state.yearIndex]);
     if (state.mix !== 50) parts.push("mix=" + state.mix);
+    // Defaults (decay on for both signals, adjustment on) are omitted, so
+    // switching one OFF needs an explicit token: decay=none and adj=0.
     var decay = (state.decayBait ? "b" : "") + (state.decayComp ? "c" : "");
-    if (decay) parts.push("decay=" + decay);
+    if (decay !== "bc") parts.push("decay=" + (decay || "none"));
     if (state.halfLife !== HL_DEFAULT) parts.push("hl=" + state.halfLife + "m");
-    if (state.adjust) parts.push("adj=1");
+    if (!state.adjust) parts.push("adj=0");
     if (state.glow !== 50) parts.push("glow=" + state.glow);
     history.replaceState(
       null, "",
@@ -324,7 +326,7 @@
         case "decay":
           state.decayBait = val.indexOf("b") >= 0;
           state.decayComp = val.indexOf("c") >= 0;
-          break;
+          break; // "none" (or any other value) turns both off
         case "hl":
           // "18m" means months; a bare number is years (older links).
           var months = /m$/.test(val)
@@ -333,7 +335,7 @@
           state.halfLife = HL_STEPS[nearestHalfLifeIndex(months || HL_DEFAULT)];
           break;
         case "adj":
-          state.adjust = val === "1";
+          state.adjust = val !== "0";
           break;
         case "glow":
           state.glow = Math.min(100, Math.max(0, parseInt(val, 10) || 0));
