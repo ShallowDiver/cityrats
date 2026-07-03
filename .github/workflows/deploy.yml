@@ -4,9 +4,12 @@ on:
   push:
     branches: [main]
   schedule:
-    # Monthly data refresh: 06:17 UTC on the 3rd. An odd minute avoids the
-    # top-of-hour crowd, and skipping the 1st avoids month-end data churn.
+    # Monthly data refresh on the 3rd, with a backstop run on the 5th in
+    # case the first attempt hits a bad hour on GitHub's side. Both fetch
+    # fresh data, so the redundancy is harmless. Odd minute to avoid the
+    # top-of-hour crowd.
     - cron: "17 6 3 * *"
+    - cron: "17 6 5 * *"
   workflow_dispatch:
 
 permissions:
@@ -19,16 +22,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  # Fetching data (about 15 minutes) is separate from deploying so a failed
+  # deploy can be retried from the Actions tab without refetching: the
+  # artifact from this job survives the run.
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url || steps.retry.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
-      # Fresh data on every deploy, so pushes and the monthly schedule both
-      # publish current numbers. Uses only the Python standard library.
+      # Fresh data on every deploy. Uses only the Python standard library.
       # If NYC Open Data is down, the job fails and the previous deployment
       # stays live.
       - name: Fetch latest data
@@ -36,20 +38,30 @@ jobs:
           python3 pipeline/fetch_bait_data.py
           python3 pipeline/fetch_complaint_data.py
 
-      # Pages must be enabled once by hand first: repo Settings, Pages,
-      # Source "GitHub Actions". The workflow token cannot do that itself.
-      - uses: actions/configure-pages@v5
-
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url || steps.retry.outputs.page_url }}
+    steps:
+      # Pages must be enabled once by hand first: repo Settings, Pages,
+      # Source "GitHub Actions". The workflow token cannot do that itself.
+      - uses: actions/configure-pages@v5
+
       # Pages deployments intermittently fail with a generic "try again
-      # later" even when nothing is wrong with the artifact, so one failure
-      # gets an automatic second attempt before the run is declared dead.
+      # later" even when nothing is wrong with the artifact, so a failure
+      # gets a second attempt after a pause before the run is declared dead.
       - id: deployment
         uses: actions/deploy-pages@v4
         continue-on-error: true
+
+      - if: steps.deployment.outcome == 'failure'
+        run: sleep 60
 
       - id: retry
         if: steps.deployment.outcome == 'failure'
