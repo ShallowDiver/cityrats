@@ -1,6 +1,6 @@
 # NYC Rodenticide Heat Map
 
-A web app that maps where rat poison is most heavily applied across New York City, alongside where New Yorkers report rats.
+A web app that maps where rat poison is most heavily applied across New York City, alongside where human New Yorkers report rats.
 
 Two signals are rendered as one blended heat map:
 
