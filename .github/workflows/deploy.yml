@@ -21,6 +21,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write  # lets the keepalive step below re-enable this workflow
 
 concurrency:
   group: pages
@@ -60,6 +61,16 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web
+
+      # GitHub silently disables scheduled workflows after 60 days with no
+      # commits, and a disabled workflow ignores pushes too. Calling the
+      # "enable workflow" endpoint counts as activity and resets that clock,
+      # so every scheduled run keeps the next one alive without a commit.
+      - name: Keep the schedule alive
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/deploy.yml/enable"
 
   deploy:
     needs: build

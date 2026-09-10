@@ -50,7 +50,7 @@ Then open http://localhost:8000.
 
 The site deploys to GitHub Pages through `.github/workflows/deploy.yml`. Every push to `main`, plus a monthly schedule (the 3rd, 06:17 UTC), fetches fresh data from NYC Open Data and publishes the `web/` directory, so the live site never lags the source data by more than a month. The workflow can also be run by hand from the Actions tab. If the data fetch fails, the previous deployment stays live.
 
-Note that GitHub automatically pauses scheduled workflows in repos with no activity for 60 days; the Actions tab will show a banner with a re-enable button if that happens.
+GitHub automatically pauses scheduled workflows in repos with no commits for 60 days, so each scheduled run re-enables the workflow through the Actions API, which resets that clock. If it ever does get paused (for example after a failed run), the Actions tab shows a banner with a re-enable button.
 
 ## The map's math
 
