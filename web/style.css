@@ -449,6 +449,16 @@ input[type="range"]::-moz-range-thumb {
   .title { font-size: 1.35rem; }
 }
 
+/* Basemap: OSM standard tiles are light, so invert them into a dark map.
+   hue-rotate undoes the color flip from invert (so water stays blue-ish),
+   then saturation and brightness are pulled down so the heat ramp stays
+   the loudest thing on screen. Only the tile pane is filtered; the heat
+   canvas and markers sit in other panes and are untouched. */
+
+.leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.75) contrast(1.05);
+}
+
 /* Leaflet chrome: cream controls floating on the dark map */
 
 .leaflet-control-attribution {
